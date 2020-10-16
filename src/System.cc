@@ -32,7 +32,12 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
+#include <time.h>	
 
+bool has_suffix(const std::string &str, const std::string &suffix) {	
+  std::size_t index = str.find(suffix, str.size() - suffix.size());	
+  return (index != std::string::npos);
+}
 namespace ORB_SLAM3
 {
 
@@ -44,26 +49,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     mbActivateLocalizationMode(false), mbDeactivateLocalizationMode(false)
 {
     // Output welcome message
-    cout << endl <<
-    "ORB-SLAM3 Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza." << endl <<
-    "ORB-SLAM2 Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza." << endl <<
-    "This program comes with ABSOLUTELY NO WARRANTY;" << endl  <<
-    "This is free software, and you are welcome to redistribute it" << endl <<
-    "under certain conditions. See LICENSE.txt." << endl << endl;
-
-    cout << "Input sensor was set to: ";
-
-    if(mSensor==MONOCULAR)
-        cout << "Monocular" << endl;
-    else if(mSensor==STEREO)
-        cout << "Stereo" << endl;
-    else if(mSensor==RGBD)
-        cout << "RGB-D" << endl;
-    else if(mSensor==IMU_MONOCULAR)
-        cout << "Monocular-Inertial" << endl;
-    else if(mSensor==IMU_STEREO)
-        cout << "Stereo-Inertial" << endl;
-
+   
     //Check settings file
     cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
     if(!fsSettings.isOpened())
@@ -76,10 +62,14 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     //----
     //Load ORB Vocabulary
-    cout << endl << "Loading ORB Vocabulary. This could take a while..." << endl;
+  
 
     mpVocabulary = new ORBVocabulary();
-    bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
+     bool bVocLoad = false; // chose loading method based on file extension	    bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
+    if (has_suffix(strVocFile, ".txt"))	
+	  bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);	
+	else	
+	  bVocLoad = mpVocabulary->loadFromBinaryFile(strVocFile);
     if(!bVocLoad)
     {
         cerr << "Wrong path to vocabulary. " << endl;
@@ -860,6 +850,17 @@ int System::GetTrackingState()
     unique_lock<mutex> lock(mMutexState);
     return mTrackingState;
 }
+
+vector<KeyFrame*> System::GetKeyFrames() const
+{
+    return mpAtlas->GetAllKeyFrames();
+}
+
+Tracking* System::GetTracker() const
+{
+    return mpTracker;
+}
+
 
 vector<MapPoint*> System::GetTrackedMapPoints()
 {
