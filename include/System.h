@@ -165,6 +165,8 @@ public:
     int GetTrackingState();
     std::vector<MapPoint*> GetTrackedMapPoints();
     std::vector<cv::KeyPoint> GetTrackedKeyPointsUn();
+    vector<KeyFrame*> GetKeyFrames() const;
+    Tracking* GetTracker() const;
 
     // For debugging
     double GetTimeFromIMUInit();
