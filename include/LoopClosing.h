@@ -25,6 +25,7 @@
 #include "Atlas.h"
 #include "ORBVocabulary.h"
 #include "Tracking.h"
+#include "Config.h"
 
 #include "KeyFrameDatabase.h"
 
@@ -46,10 +47,10 @@ class LoopClosing
 {
 public:
 
-    typedef pair<set<KeyFrame*>,int> ConsistentGroup;    
+    typedef pair<set<KeyFrame*>,int> ConsistentGroup;
     typedef map<KeyFrame*,g2o::Sim3,std::less<KeyFrame*>,
         Eigen::aligned_allocator<std::pair<KeyFrame* const, g2o::Sim3> > > KeyFrameAndPose;
-    
+
 public:
 
     LoopClosing(Atlas* pAtlas, KeyFrameDatabase* pDB, ORBVocabulary* pVoc,const bool bFixScale);
@@ -76,7 +77,7 @@ public:
     bool isFinishedGBA(){
         unique_lock<std::mutex> lock(mMutexGBA);
         return mbFinishedGBA;
-    }   
+    }
 
     void RequestFinish();
 
@@ -85,6 +86,26 @@ public:
     Viewer* mpViewer;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+#ifdef REGISTER_TIMES
+    double timeDetectBoW;
+
+    std::vector<double> vTimeBoW_ms;
+    std::vector<double> vTimeSE3_ms;
+    std::vector<double> vTimePRTotal_ms;
+
+    std::vector<double> vTimeLoopFusion_ms;
+    std::vector<double> vTimeLoopEssent_ms;
+    std::vector<double> vTimeLoopTotal_ms;
+
+    std::vector<double> vTimeMergeFusion_ms;
+    std::vector<double> vTimeMergeBA_ms;
+    std::vector<double> vTimeMergeTotal_ms;
+
+    std::vector<double> vTimeFullGBA_ms;
+    std::vector<double> vTimeMapUpdate_ms;
+    std::vector<double> vTimeGBATotal_ms;
+#endif
 
 protected:
 
@@ -111,9 +132,6 @@ protected:
 
     void MergeLocal();
     void MergeLocal2();
-
-    void CheckObservations(set<KeyFrame*> &spKFsMap1, set<KeyFrame*> &spKFsMap2);
-    void printReprojectionError(set<KeyFrame*> &spLocalWindowKFs, KeyFrame* mpCurrentKF, string &name);
 
     void ResetIfRequested();
     bool mbResetRequested;
